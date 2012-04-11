@@ -50,6 +50,7 @@ static NSString * const kAppearanceObjectSelCustomImp = @"kAppearanceObjectSelCu
 @implementation TKAppearance
 @synthesize customizableClass=customizableClass_, invocations=invocations_, properties=properties_;
 @synthesize hooks=hooks_;
+@synthesize needsUpdate;
 
 IMP UIView_orig_hookMethod;
 static void UIView_hookMethod(id self, SEL _cmd, CALayer *layer) {
@@ -288,6 +289,8 @@ static void UIView_hookMethod(id self, SEL _cmd, CALayer *layer) {
 - (void)addSwizzleInvocation:(NSInvocation *)anInvocation withProperties:(NSDictionary *)properties {
     
     NSString *hookName = [properties objectForKey:@"hookSel"];
+    if (!hookName) return;
+    
     
     TKAppearance *app = self;
     

@@ -35,6 +35,7 @@
     NSDictionary *d2 = [NSDictionary dictionaryWithObjectsAndKeys:
                         @"v@:@", @"encoding",
                         [NSNumber numberWithBool:NO], @"addImp",
+                        @"drawText:inRect:barStyle:", @"hookSel",
                         @"UINavigationItemView", @"hookClass",
                         ^(id _self, NSArray *origArgs, va_list args) {
                             NSDictionary *textAttributes = [origArgs objectAtIndex:0];
