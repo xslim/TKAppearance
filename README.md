@@ -1,3 +1,8 @@
+== About ==
+This thing let's you mimic Apples UIAppearance thing back on iOS 4
+
+== Install guide ==
+* `#import "TKAppearance.h"`
 * Dont forget to add `-fno-objc-arc` to all .m files in Target - Build Phases
 
 
@@ -26,3 +31,8 @@ bgImg = [Decorator backgroundImageForSelectedTabBarItemWithSize:CGSizeMake(w, 48
 ```
 
 on iOS 4 !!!
+== Plugin creation ==
+* Look in source files
+
+
+
