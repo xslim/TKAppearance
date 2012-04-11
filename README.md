@@ -4,10 +4,14 @@
 Now you can do something like this
 
 ``` objc
-[[UINavigationBar appearance] setTintColor:[UIColor redColor]];
+#ifdef UI_APPEARANCE_SELECTOR
+
+    [[UINavigationBar appearance] setTintColor:[UIColor redColor]];
     
-UIImage *bgImg = [KPNNavigationBarDecorator backgroundImageForNavigationBarWithSize:CGSizeMake(320.f, 44.f)];
-[[UINavigationBar appearance] setBackgroundImage:bgImg forBarMetrics:UIBarMetricsDefault];
+    UIImage *bgImg = [NavigationBarDecorator backgroundImageForNavigationBarWithSize:CGSizeMake(320.f, 44.f)];
+    [[UINavigationBar appearance] setBackgroundImage:bgImg forBarMetrics:UIBarMetricsDefault];
+
+#endif
 ```
 
 on iOS 4 !!!

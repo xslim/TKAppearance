@@ -1,9 +1,7 @@
 //
 //  NSObject+TKSwizzle.m
-//  KPN-Hotspots
 //
 //  Created by Taras Kalapun on 4/10/12.
-//  Copyright (c) 2012 Xaton. All rights reserved.
 //
 
 #import "NSObject+TKSwizzle.h"
