@@ -2,11 +2,12 @@
 
 
 Now you can do something like this
-``` obj-c
-    [[UINavigationBar appearance] setTintColor:[UIColor redColor]];
+
+``` objc
+[[UINavigationBar appearance] setTintColor:[UIColor redColor]];
     
-    UIImage *bgImg = [KPNNavigationBarDecorator backgroundImageForNavigationBarWithSize:CGSizeMake(320.f, 44.f)];
-    [[UINavigationBar appearance] setBackgroundImage:bgImg forBarMetrics:UIBarMetricsDefault];
+UIImage *bgImg = [KPNNavigationBarDecorator backgroundImageForNavigationBarWithSize:CGSizeMake(320.f, 44.f)];
+[[UINavigationBar appearance] setBackgroundImage:bgImg forBarMetrics:UIBarMetricsDefault];
 ```
 
 on iOS 4 !!!
