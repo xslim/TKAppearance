@@ -1,0 +1,24 @@
+# OS X ignores
+.DS_Store
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+
+# /
+/build
+/svn-commit.tmp
+
+*.xcodeproj/xcuserdata
+*.xcodeproj/*.pbxuser
+*.xcodeproj/*.mode1v3
+*/xcuserdata
+*.xcodeproj/project.xcworkspace/xcuserdata
+*.xcodeproj/project.xcworkspace/xcshareddata
+
+*.xcodeproj/xcuserdata/
+
+xcuserdata
+
+# CocoaPods
+/Pods
