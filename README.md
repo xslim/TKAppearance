@@ -7,7 +7,7 @@ Now you can do something like this:
 
 [[UINavigationBar appearance] setTintColor:[UIColor redColor]];
     
-UIImage *bgImg = [NavigationBarDecorator backgroundImageForNavigationBarWithSize:CGSizeMake(320.f, 44.f)];
+UIImage *bgImg = [Decorator backgroundImageForNavigationBarWithSize:CGSizeMake(320.f, 44.f)];
 [[UINavigationBar appearance] setBackgroundImage:bgImg forBarMetrics:UIBarMetricsDefault];
 
 [[UINavigationBar appearance] setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:
@@ -15,6 +15,9 @@ UIImage *bgImg = [NavigationBarDecorator backgroundImageForNavigationBarWithSize
                                                           //[UIColor redColor], UITextAttributeTextColor,
                                                           [UIColor styledShadowColor], UITextAttributeTextShadowColor,
                                                           nil]];
+
+bgImg = [Decorator backgroundImageForTabBarWithSize:CGSizeMake(320.f, 50.f)];
+[[UITabBar appearance] setBackgroundImage:bgImg];
 
 
 ```
