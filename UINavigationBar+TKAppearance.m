@@ -21,6 +21,17 @@
         
         CGRect rect = va_arg(args, CGRect);
         
+        /*
+         // Tiled
+         CGSize imageViewSize = imageView.bounds.size;
+         UIGraphicsBeginImageContext(imageViewSize);
+         CGContextRef imageContext = UIGraphicsGetCurrentContext();
+         CGContextDrawTiledImage(imageContext, (CGRect){ CGPointZero, imageViewSize }, tileImage);
+         UIImage *finishedImage = UIGraphicsGetImageFromCurrentImageContext();
+         UIGraphicsEndImageContext();
+         */
+        
+        
         [image drawInRect:rect];
     }
     };
