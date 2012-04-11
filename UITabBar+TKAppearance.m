@@ -12,33 +12,33 @@
 
 + (NSDictionary *)proxiedAppearanceMethods {
     
-    NSDictionary *d1 = @{
-    @"encoding" : @"v@:@",
-    @"addImp" : [NSNumber numberWithBool:NO],
-    @"hookSel" : @"drawRect:",
-    @"hookBlockAfter" : ^(id _self, NSArray *origArgs, va_list args) {
-        UIImage *image = [origArgs objectAtIndex:0];
-        CGRect rect = va_arg(args, CGRect);
-        [image drawInRect:rect];
-    }
-    };
+    NSDictionary *d1 = [NSDictionary dictionaryWithObjectsAndKeys:
+                        @"v@:@", @"encoding",
+                        [NSNumber numberWithBool:NO], @"addImp",
+                        @"drawRect:", @"hookSel",
+                        ^(id _self, NSArray *origArgs, va_list args) {
+                            UIImage *image = [origArgs objectAtIndex:0];
+                            CGRect rect = va_arg(args, CGRect);
+                            [image drawInRect:rect];
+                        }, @"hookBlockAfter",
+                        nil];
     
-    NSDictionary *d2 = @{
-    @"encoding" : @"v@:@",
-    @"addImp" : [NSNumber numberWithBool:NO],
-    @"hookClass" : @"UITabBarSelectionIndicatorView",
-    @"hookSel" : @"drawRect:",
-    @"hookBlockInstead" : ^(id _self, NSArray *origArgs, va_list args) {
-        UIImage *image = [origArgs objectAtIndex:0];
-        CGRect rect = va_arg(args, CGRect);
-        [image drawInRect:rect];
-    }
-    };
+    NSDictionary *d2 = [NSDictionary dictionaryWithObjectsAndKeys:
+                        @"v@:@", @"encoding",
+                        [NSNumber numberWithBool:NO], @"addImp",
+                        @"UITabBarSelectionIndicatorView", @"hookClass",
+                        @"drawRect:", @"hookSel",
+                        ^(id _self, NSArray *origArgs, va_list args) {
+                            UIImage *image = [origArgs objectAtIndex:0];
+                            CGRect rect = va_arg(args, CGRect);
+                            [image drawInRect:rect];
+                        }, @"hookBlockInstead",
+                        nil];
     
-    return @{
-    @"setBackgroundImage:" : d1,
-    @"setSelectionIndicatorImage:" : d2
-    };
+    return [NSDictionary dictionaryWithObjectsAndKeys:
+            d1, @"setBackgroundImage:",
+            d2, @"setSelectionIndicatorImage:",
+            nil];
 }
 
 @end
