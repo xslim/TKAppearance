@@ -89,11 +89,20 @@ static void UIView_hookMethod(id self, SEL _cmd, CALayer *layer) {
     [self.properties addObject:d];
 }
 
+- (BOOL)hasHooksIn:(NSString *)hookName context:(NSString *)context {
+    NSDictionary *hooks = [self.hooks objectForKey:hookName];
+    return ([[hooks objectForKey:context] count] > 0 ? YES : NO);
+}
+
+- (NSDictionary *)checksForHook:(NSString *)hookName {
+    NSDictionary *hooks = [self.hooks objectForKey:hookName];
+    return [hooks objectForKey:@"checks"];
+}
+
 - (void)callHooksIn:(NSString *)hookName context:(NSString *)context target:(id)_self args:(va_list)argp {
     NSDictionary *hooks = [self.hooks objectForKey:hookName];
-    for (NSDictionary *d in [hooks objectForKey:context]) {
-        void (^block)(id, NSInvocation *, ...) = [d objectForKey:@"block"];
-        NSInvocation *inv = [d objectForKey:@"invocation"];
+    for (void (^block)(id, NSInvocation *, ...) in [hooks objectForKey:context]) {
+        NSInvocation *inv = [hooks objectForKey:@"invocation"];
         block(_self, inv, argp);
     }
 }
@@ -107,61 +116,96 @@ static void UIView_hookMethod(id self, SEL _cmd, CALayer *layer) {
     IMP altImp = imp_implementationWithBlock(^(id _self, ...) {
         TKAppearance *app = [[_self class] appearance];
         
+        BOOL triggerHooks = YES;
+        NSDictionary *checks = [app checksForHook:hookName];
+        
+        NSString *checkSuperviewIs = [checks objectForKey:@"superviewIs"];
+        if (checkSuperviewIs) {
+            UIView *superview = [_self performSelector:@selector(superview)];
+            if (![superview isKindOfClass:NSClassFromString(checkSuperviewIs)])
+                triggerHooks = NO;
+        }
+        
+        NSArray *checkClassNotIn = [checks objectForKey:@"classNotIn"];
+        if (checkClassNotIn) {
+            for (NSString *cs in checkClassNotIn) {
+                if ([_self isKindOfClass:NSClassFromString(cs)]) {
+                    triggerHooks = NO;
+                }
+            }
+        }
+        
         va_list argp;
         va_start(argp, _self);
-        [app callHooksIn:hookName context:@"before" target:_self args:argp];
-        origImp(_self, origSel, argp);
-        [app callHooksIn:hookName context:@"after" target:_self args:argp];
+        if (triggerHooks) [app callHooksIn:hookName context:@"before" target:_self args:argp];
+        
+        if ([app hasHooksIn:hookName context:@"instead"] && triggerHooks) {
+            [app callHooksIn:hookName context:@"instead" target:_self args:argp];
+        } else {
+            origImp(_self, origSel, argp);
+        }
+        
+        if (triggerHooks) [app callHooksIn:hookName context:@"after" target:_self args:argp];
         va_end(argp);
     });
     
     [self.customizableClass swizzleMethod:origSel with:altImp store:NULL];
 }
 
-
-- (void)addHook:(NSString *)hookName before:(void *)beforeBlock after:(void *)afterBlock invocation:(NSInvocation *)inv {
+- (void)addHook:(NSString *)hookName block:(void *)block context:(NSString *)context {
+    if (!block) return;
     
-    BOOL isNewHook = NO;
     NSMutableDictionary *hooks = [self.hooks objectForKey:hookName];
+    
+    NSMutableArray *a = [hooks objectForKey:context];
+    if (!a) {
+        a = [NSMutableArray array];
+        [hooks setObject:a forKey:context];
+    }
+    
+    [a addObject:block];
+}
+
+- (BOOL)createHook:(NSString *)hookName invocation:(NSInvocation *)inv checks:(NSDictionary *)checks {
+    BOOL isNewHook = NO;
+    
+    NSMutableDictionary *hooks = [self.hooks objectForKey:hookName];
+    
     if (!hooks) {
         isNewHook = YES;
         hooks = [NSMutableDictionary dictionary];
-    }
-    
-    if (beforeBlock) {
-        NSMutableArray *a = [hooks objectForKey:@"before"];
-        if (!a) a = [NSMutableArray array];
         
-        NSDictionary *d = [NSDictionary dictionaryWithObjectsAndKeys:
-                           beforeBlock, @"block",
-                           inv, @"invocation",
-                           nil];
-        [a addObject:d];
-        [hooks setObject:a forKey:@"before"];
-    }
-    
-    if (afterBlock) {
-        NSMutableArray *a = [hooks objectForKey:@"after"];
-        if (!a) a = [NSMutableArray array];
+        [hooks setObject:inv forKey:@"invocation"];
+        if (checks) [hooks setObject:checks forKey:@"checks"];
         
-        NSDictionary *d = [NSDictionary dictionaryWithObjectsAndKeys:
-                           afterBlock, @"block",
-                           inv, @"invocation",
-                           nil];
-        [a addObject:d];
-        [hooks setObject:a forKey:@"after"];
-    }
-    
-    if (isNewHook) {
         [self.hooks setObject:hooks forKey:hookName];
-        [self updateHook:hookName];
     }
+    
+    return isNewHook;
 }
 
 - (void)addSwizzleInvocation:(NSInvocation *)anInvocation withProperties:(NSDictionary *)properties {
     
     NSString *hookName = [properties objectForKey:@"hookSel"];
-    [self addHook:hookName before:[properties objectForKey:@"hookBlockBefore"] after:[properties objectForKey:@"hookBlockAfter"] invocation:anInvocation];
+    
+    TKAppearance *app = self;
+    
+    NSString *hookClassStr = [properties objectForKey:@"hookClass"];
+    if (hookClassStr && NSClassFromString(hookClassStr) != self.customizableClass) {
+        app = [[[TKAppearance alloc] initWithClass:NSClassFromString(hookClassStr)] autorelease];
+    }
+    
+    NSDictionary *checks = [properties objectForKey:@"hookCheck"];
+    
+    BOOL isNewHook = [app createHook:hookName invocation:anInvocation checks:checks];
+    
+    [app addHook:hookName block:[properties objectForKey:@"hookBlockBefore"] context:@"before"];
+    [app addHook:hookName block:[properties objectForKey:@"hookBlockAfter"] context:@"after"];
+    [app addHook:hookName block:[properties objectForKey:@"hookBlockInstead"] context:@"instead"];
+    
+    if (isNewHook) {
+        [app updateHook:hookName];
+    }
 }
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)sel {
