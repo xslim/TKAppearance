@@ -39,7 +39,6 @@
     NSDictionary *d2 = @{
     @"encoding" : @"v@:@",
     @"addImp" : [NSNumber numberWithBool:NO],
-    //@"imp" : ^(id _self, UIImage *image, int metrics) { },
     @"hookClass" : @"UINavigationItemView",
     @"hookSel" : @"drawText:inRect:barStyle:", //iOS 4.3, if 4.0 - drawText:inRect:
     @"hookCheck" : @{
@@ -82,11 +81,7 @@
     }
     };
     
-    //[[UINavigationBar appearance] setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:
-    //[UIFont fontWithName:@"KPNSans-Bold" size:21.0], UITextAttributeFont,
-    //nil]];
-    
-    
+
     return @{
     @"setBackgroundImage:forBarMetrics:" : d1,
     @"setTitleTextAttributes:" : d2

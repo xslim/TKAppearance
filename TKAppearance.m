@@ -175,7 +175,12 @@ static void UIView_hookMethod(id self, SEL _cmd, CALayer *layer) {
         isNewHook = YES;
         hooks = [NSMutableDictionary dictionary];
         
-        [hooks setObject:inv forKey:@"invocation"];
+        NSInvocation *newInv = [inv copy];
+        
+        [hooks setObject:newInv forKey:@"invocation"];
+        
+        [newInv release];
+        
         if (checks) [hooks setObject:checks forKey:@"checks"];
         
         [self.hooks setObject:hooks forKey:hookName];
