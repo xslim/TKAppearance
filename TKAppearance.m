@@ -190,6 +190,9 @@ static void UIView_hookMethod(id self, SEL _cmd, CALayer *layer) {
 
 - (void)forwardInvocation:(NSInvocation *)anInvocation {    
     SEL origSel = anInvocation.selector;
+    
+    [anInvocation retainArguments];
+    
     if ([self.customizableClass instancesRespondToSelector:origSel]) {
         // TODO: Search if we already have this SEL in array
         [self addInvocation:anInvocation];
