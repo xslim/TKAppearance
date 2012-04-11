@@ -19,6 +19,9 @@ UIImage *bgImg = [Decorator backgroundImageForNavigationBarWithSize:CGSizeMake(3
 bgImg = [Decorator backgroundImageForTabBarWithSize:CGSizeMake(320.f, 50.f)];
 [[UITabBar appearance] setBackgroundImage:bgImg];
 
+CGFloat w = 320.f / self.tabBarController.viewControllers.count -4;
+bgImg = [Decorator backgroundImageForSelectedTabBarItemWithSize:CGSizeMake(w, 48.f)];
+[[UITabBar appearance] setSelectionIndicatorImage:bgImg];
 
 ```
 
