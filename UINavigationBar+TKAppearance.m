@@ -15,10 +15,8 @@
     @"addImp" : [NSNumber numberWithBool:NO],
     //@"imp" : ^(id _self, UIImage *image, int metrics) { },
     @"hookSel" : @"drawRect:",
-    @"hookBlockAfter" : ^(id _self, NSInvocation *origInv, va_list args) {
-        UIImage *image = nil;
-        [origInv getArgument:&image atIndex:2];//start with 2
-        
+    @"hookBlockAfter" : ^(id _self, NSArray *origArgs, va_list args) {
+        UIImage *image = [origArgs objectAtIndex:0];
         CGRect rect = va_arg(args, CGRect);
         
         /*
@@ -30,8 +28,6 @@
          UIImage *finishedImage = UIGraphicsGetImageFromCurrentImageContext();
          UIGraphicsEndImageContext();
          */
-        
-        
         [image drawInRect:rect];
     }
     };
@@ -45,9 +41,8 @@
         @"superviewIs" : @"UINavigationBar",
         @"classNotIn" : @[ @"UINavigationItemButtonView" ]
     },
-    @"hookBlockInstead" : ^(id _self, NSInvocation *origInv, va_list args) {
-        NSDictionary *textAttributes = nil;
-        [origInv getArgument:&textAttributes atIndex:2];//start with 2
+    @"hookBlockInstead" : ^(id _self, NSArray *origArgs, va_list args) {
+        NSDictionary *textAttributes = [origArgs objectAtIndex:0];
         
         UIFont *font = [textAttributes objectForKey:UITextAttributeFont];
         if (!font) font = [UIFont boldSystemFontOfSize:20.f];

@@ -16,9 +16,8 @@
     @"encoding" : @"v@:@",
     @"addImp" : [NSNumber numberWithBool:NO],
     @"hookSel" : @"drawRect:",
-    @"hookBlockAfter" : ^(id _self, NSInvocation *origInv, va_list args) {
-        UIImage *image = nil;
-        [origInv getArgument:&image atIndex:2];//start with 2
+    @"hookBlockAfter" : ^(id _self, NSArray *origArgs, va_list args) {
+        UIImage *image = [origArgs objectAtIndex:0];
         CGRect rect = va_arg(args, CGRect);
         [image drawInRect:rect];
     }
@@ -29,9 +28,8 @@
     @"addImp" : [NSNumber numberWithBool:NO],
     @"hookClass" : @"UITabBarSelectionIndicatorView",
     @"hookSel" : @"drawRect:",
-    @"hookBlockInstead" : ^(id _self, NSInvocation *origInv, va_list args) {
-        UIImage *image = nil;
-        [origInv getArgument:&image atIndex:2];//start with 2
+    @"hookBlockInstead" : ^(id _self, NSArray *origArgs, va_list args) {
+        UIImage *image = [origArgs objectAtIndex:0];
         CGRect rect = va_arg(args, CGRect);
         [image drawInRect:rect];
     }
