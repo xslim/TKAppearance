@@ -21,6 +21,11 @@
                             CGRect rect = va_arg(args, CGRect);
                             [image drawInRect:rect];
                         }, @"hookBlockAfter",
+                        ^(id _self, IMP origImp, va_list args) {
+                            SEL sel = NSSelectorFromString(@"drawRect:");
+                            CGRect rect = va_arg(args, CGRect);
+                            origImp(_self, sel, rect);
+                        }, @"origBlock",
                         nil];
     
     NSDictionary *d2 = [NSDictionary dictionaryWithObjectsAndKeys:
@@ -33,6 +38,11 @@
                             CGRect rect = va_arg(args, CGRect);
                             [image drawInRect:rect];
                         }, @"hookBlockInstead",
+                        ^(id _self, IMP origImp, va_list args) {
+                            SEL sel = NSSelectorFromString(@"drawRect:");
+                            CGRect rect = va_arg(args, CGRect);
+                            origImp(_self, sel, rect);
+                        }, @"origBlock",
                         nil];
     
     return [NSDictionary dictionaryWithObjectsAndKeys:

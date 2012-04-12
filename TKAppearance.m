@@ -9,7 +9,7 @@
 #import "NSObject+TKSwizzle.h"
 #import <objc/runtime.h>
 #import <objc/message.h>
-
+#import "NSInvocation+TKAdditions.h"
 
 static NSString * const kAppearanceObjectSel = @"kAppearanceObjectSel";
 static NSString * const kAppearanceObjectSelInvocation = @"kAppearanceObjectSelInvocation";
@@ -37,6 +37,7 @@ static NSString * const kAppearanceObjectSelCustomImp = @"kAppearanceObjectSelCu
 @property (retain, nonatomic) NSMutableArray *properties;
 @property (retain, nonatomic) NSMutableArray *invocations;
 @property (assign, nonatomic) BOOL needsUpdate;
+@property (assign, nonatomic) BOOL classSwizzled;
 
 @property (retain, nonatomic) NSMutableDictionary *hooks;
 
@@ -49,14 +50,8 @@ static NSString * const kAppearanceObjectSelCustomImp = @"kAppearanceObjectSelCu
 
 @implementation TKAppearance
 @synthesize customizableClass=customizableClass_, invocations=invocations_, properties=properties_;
+@synthesize needsUpdate, classSwizzled;
 @synthesize hooks=hooks_;
-@synthesize needsUpdate;
-
-IMP UIView_orig_hookMethod;
-static void UIView_hookMethod(id self, SEL _cmd, CALayer *layer) {
-    [TKAppearance applyInvocationsTo:layer.delegate];
-    UIView_orig_hookMethod(self, _cmd, layer);
-}
 
 - (id)initWithClass:(Class)newClass {
     
@@ -73,7 +68,16 @@ static void UIView_hookMethod(id self, SEL _cmd, CALayer *layer) {
     }
     
     // Found from _UIAppearance
-    [self.customizableClass swizzleMethod:@selector(layoutSublayersOfLayer:) with:(IMP)UIView_hookMethod store:&UIView_orig_hookMethod];
+    if (!self.classSwizzled) {
+        SEL origSel = @selector(layoutSublayersOfLayer:);
+        IMP origImp = class_getMethodImplementation(self.customizableClass, origSel);
+        IMP altImp = imp_implementationWithBlock(^(id _self, CALayer *layer){
+            [TKAppearance applyInvocationsTo:layer.delegate];
+            origImp(_self, origSel, layer);
+        });
+        [self.customizableClass swizzleMethod:origSel with:altImp store:NULL];
+        self.classSwizzled = YES;
+    }
     
     // let it be here
     [am addAppearanceObject:self];
@@ -108,6 +112,13 @@ static void UIView_hookMethod(id self, SEL _cmd, CALayer *layer) {
     }
 }
 
+- (void)hook:(NSString *)hookName callOriginalImp:(IMP)origImp target:(id)_self args:(va_list)argp {
+    NSDictionary *hooks = [self.hooks objectForKey:hookName];
+    void (^block)(id, IMP, va_list) = [hooks objectForKey:@"origBlock"];
+    if (block)
+        block(_self, origImp, argp);
+}
+
 - (void)updateHook:(NSString *)hookName {
     // Here goes the swizzling
     
@@ -115,7 +126,7 @@ static void UIView_hookMethod(id self, SEL _cmd, CALayer *layer) {
     IMP origImp = class_getMethodImplementation(self.customizableClass, origSel);
     
     IMP altImp = imp_implementationWithBlock(^(id _self, ...) {
-        TKAppearance *app = [[_self class] appearance];
+        TKAppearance *app = [[_self class] tkAppearance];
         
         BOOL triggerHooks = YES;
         NSDictionary *checks = [app checksForHook:hookName];
@@ -143,20 +154,23 @@ static void UIView_hookMethod(id self, SEL _cmd, CALayer *layer) {
         if ([app hasHooksIn:hookName context:@"instead"] && triggerHooks) {
             [app callHooksIn:hookName context:@"instead" target:_self args:argp];
         } else {
-            origImp(_self, origSel, argp);
+            [app hook:hookName callOriginalImp:origImp target:_self args:argp];
+            //origImp(_self, origSel, argp);
+            //[[_self class] printClassMethods];
         }
-        
+                
         if (triggerHooks) [app callHooksIn:hookName context:@"after" target:_self args:argp];
         va_end(argp);
     });
-    
+       
     [self.customizableClass swizzleMethod:origSel with:altImp store:NULL];
 }
 
 - (void)addHook:(NSString *)hookName block:(void *)block context:(NSString *)context {
+
     if (!block) return;
     
-    NSMutableDictionary *hooks = [self.hooks objectForKey:hookName];
+    NSMutableDictionary *hooks= [self.hooks objectForKey:hookName];
     
     NSMutableArray *a = [hooks objectForKey:context];
     if (!a) {
@@ -165,106 +179,6 @@ static void UIView_hookMethod(id self, SEL _cmd, CALayer *layer) {
     }
     
     [a addObject:block];
-}
-
-- (NSArray *)argumentsFromInvocation:(NSInvocation *)invocation encoding:(NSString *)encoding {
-    
-    const char *type = [encoding cStringUsingEncoding:NSASCIIStringEncoding];
-    NSMethodSignature *sig = [NSMethodSignature signatureWithObjCTypes:type];
-    
-    const char* argType;
-	NSUInteger i;
-	NSUInteger argc = [sig numberOfArguments];
-    
-    NSMutableArray *args = [NSMutableArray arrayWithCapacity:argc-2];
-    
-	for (i = 2; i < argc; i++) { // self and _cmd are at index 0 and 1
-        
-		argType = [sig getArgumentTypeAtIndex:i];
-        int ai = i-2;
-        
-		if(!strcmp(argType, @encode(id))) {
-			id arg = nil;
-            [invocation getArgument:&arg atIndex:i];
-            [args insertObject:arg atIndex:ai];
-		} else if(!strcmp(argType, @encode(SEL))) {
-			SEL arg = nil;
-			[invocation getArgument:&arg atIndex:i];
-            [args insertObject:NSStringFromSelector(arg) atIndex:ai];
-		} else if(!strcmp(argType, @encode(Class))) {
-			Class arg = nil;
-			[invocation getArgument:&arg atIndex:i];
-            [args insertObject:arg atIndex:ai];
-		} else if(!strcmp(argType, @encode(char))) {
-			char arg;
-			[invocation getArgument:&arg atIndex:i];
-            [args insertObject:[NSNumber numberWithChar:arg] atIndex:ai];
-		} else if(!strcmp(argType, @encode(unsigned char))) {
-			unsigned char arg;
-			[invocation getArgument:&arg atIndex:i];
-            [args insertObject:[NSNumber numberWithUnsignedChar:arg] atIndex:ai];
-		} else if(!strcmp(argType, @encode(int))) {
-			int arg;
-			[invocation getArgument:&arg atIndex:i];
-            [args insertObject:[NSNumber numberWithInt:arg] atIndex:ai];
-		} else if(!strcmp(argType, @encode(bool))) {
-			bool arg;
-			[invocation getArgument:&arg atIndex:i];
-            [args insertObject:[NSNumber numberWithBool:arg] atIndex:ai];
-		} else if(!strcmp(argType, @encode(BOOL))) {
-			BOOL arg;
-			[invocation getArgument:&arg atIndex:i];
-            [args insertObject:[NSNumber numberWithBool:arg] atIndex:ai];
-		} else if(!strcmp(argType, @encode(short))) {
-			short arg;
-			[invocation getArgument:&arg atIndex:i];
-            [args insertObject:[NSNumber numberWithShort:arg] atIndex:ai];
-		} else if(!strcmp(argType, @encode(unichar))) {
-			unichar arg;
-			[invocation getArgument:&arg atIndex:i];
-            [args insertObject:[NSNumber numberWithUnsignedShort:arg] atIndex:ai];
-		} else if(!strcmp(argType, @encode(float))) {
-			float arg;
-			[invocation getArgument:&arg atIndex:i];
-            [args insertObject:[NSNumber numberWithFloat:arg] atIndex:ai];
-		} else if(!strcmp(argType, @encode(double))) {
-			double arg;
-			[invocation getArgument:&arg atIndex:i];
-            [args insertObject:[NSNumber numberWithDouble:arg] atIndex:ai];
-		} else if(!strcmp(argType, @encode(long))) {
-			long arg;
-			[invocation getArgument:&arg atIndex:i];
-            [args insertObject:[NSNumber numberWithLong:arg] atIndex:ai];
-		} else if(!strcmp(argType, @encode(long long))) {
-			long long arg;
-			[invocation getArgument:&arg atIndex:i];
-            [args insertObject:[NSNumber numberWithLongLong:arg] atIndex:ai];
-		} else if(!strcmp(argType, @encode(unsigned int))) {
-			unsigned int arg;
-			[invocation getArgument:&arg atIndex:i];
-            [args insertObject:[NSNumber numberWithUnsignedInt:arg] atIndex:ai];
-		} else if(!strcmp(argType, @encode(unsigned long))) {
-			unsigned long arg;
-			[invocation getArgument:&arg atIndex:i];
-            [args insertObject:[NSNumber numberWithUnsignedLong:arg] atIndex:ai];
-		} else if(!strcmp(argType, @encode(unsigned long long))) {
-			unsigned long long arg;
-			[invocation getArgument:&arg atIndex:i];
-            [args insertObject:[NSNumber numberWithUnsignedLongLong:arg] atIndex:ai];
-		} else if(!strcmp(argType, @encode(char*))) {
-			char* arg;
-			[invocation getArgument:&arg atIndex:i];
-            [args insertObject:[NSString stringWithCString:arg encoding:NSASCIIStringEncoding] atIndex:ai];
-		} else if(!strcmp(argType, @encode(void*))) {
-			void* arg;
-			[invocation getArgument:&arg atIndex:i];
-            [args insertObject:arg atIndex:ai];
-		} else {
-			NSAssert1(NO, @"-- Unhandled type: %s", argType);
-		}
-	}
-    
-    return args;
 }
 
 - (BOOL)createHook:(NSString *)hookName arguments:(NSArray *)arguments checks:(NSDictionary *)checks {
@@ -276,14 +190,20 @@ static void UIView_hookMethod(id self, SEL _cmd, CALayer *layer) {
         isNewHook = YES;
         hooks = [NSMutableDictionary dictionary];
         
-        [hooks setObject:arguments forKey:@"arguments"];
-        
-        if (checks) [hooks setObject:checks forKey:@"checks"];
-        
         [self.hooks setObject:hooks forKey:hookName];
     }
     
+    if (arguments) [hooks setObject:arguments forKey:@"arguments"];
+    if (checks) {
+        [hooks setObject:checks forKey:@"checks"];
+    }
+    
     return isNewHook;
+}
+
+- (void)hook:(NSString *)hookName addOriginalImpBlock:(void *)block {
+    NSMutableDictionary *hooks = [self.hooks objectForKey:hookName];
+    [hooks setObject:block forKey:@"origBlock"];
 }
 
 - (void)addSwizzleInvocation:(NSInvocation *)anInvocation withProperties:(NSDictionary *)properties {
@@ -299,12 +219,13 @@ static void UIView_hookMethod(id self, SEL _cmd, CALayer *layer) {
         app = [[[TKAppearance alloc] initWithClass:NSClassFromString(hookClassStr)] autorelease];
     }
     
-    NSDictionary *checks = [properties objectForKey:@"hookCheck"];
-    
-    
-    NSArray *args = [self argumentsFromInvocation:anInvocation encoding:[properties objectForKey:@"encoding"]];
+    NSDictionary *checks = [properties objectForKey:@"hookChecks"];
+    NSArray *args = [anInvocation arrayArguments];
     
     BOOL isNewHook = [app createHook:hookName arguments:args checks:checks];
+    
+    void *block = [properties objectForKey:@"origBlock"];
+    if (block) [app hook:hookName addOriginalImpBlock:block];
     
     [app addHook:hookName block:[properties objectForKey:@"hookBlockBefore"] context:@"before"];
     [app addHook:hookName block:[properties objectForKey:@"hookBlockAfter"] context:@"after"];
@@ -313,6 +234,10 @@ static void UIView_hookMethod(id self, SEL _cmd, CALayer *layer) {
     if (isNewHook) {
         [app updateHook:hookName];
     }
+}
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"%@ [%@]", [self class], self.customizableClass];
 }
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)sel {
@@ -358,12 +283,12 @@ static void UIView_hookMethod(id self, SEL _cmd, CALayer *layer) {
 
 
 + (void)applyInvocationsTo:(id)obj {
-    TKAppearance *app = [[obj class] performSelector:@selector(appearance)];
-    if (!app.needsUpdate) return;
+    TKAppearance *app = [[obj class] performSelector:@selector(tkAppearance)];
+    if ([obj tkAppearanceApplied]) return;
     
     
     for (NSMutableDictionary *d in app.properties) {
-        if ([[d objectForKey:kAppearanceObjectSelNeetsConfigure] boolValue]) {
+        //if ([[d objectForKey:kAppearanceObjectSelNeetsConfigure] boolValue]) {
             
             if (![[d objectForKey:kAppearanceObjectSelPreInit] boolValue]) {
                 NSInvocation *inv = [d objectForKey:kAppearanceObjectSelInvocation];
@@ -372,9 +297,9 @@ static void UIView_hookMethod(id self, SEL _cmd, CALayer *layer) {
             }
             
             [d setObject:[NSNumber numberWithBool:NO] forKey:kAppearanceObjectSelNeetsConfigure];
-        }
+        //}
     }
-    app.needsUpdate = NO;
+    [obj setTkAppearanceApplied:YES];
 }
 
 @end
@@ -454,9 +379,32 @@ static id UIView_appearance(id self, SEL _cmd) {
 }
 
 + (void)load {
-    if ([UIView respondsToSelector:@selector(appearance)]) return;
-    
-    [UIView addClassMethod:@selector(appearance) with:(IMP)UIView_appearance types:"@@:"];
+    if (![UIView respondsToSelector:@selector(appearance)]) {
+        [UIView addClassMethod:@selector(appearance) with:(IMP)UIView_appearance types:"@@:"];
+    }
+}
+
+static char kAppearanceApplied; 
+
+- (BOOL)tkAppearanceApplied {
+    NSNumber *nBool = objc_getAssociatedObject(self, &kAppearanceApplied);
+    return [nBool boolValue];
+}
+
++ (TKAppearance *)tkAppearance {
+    TKAppearance *app = nil;
+    app = [[TKAppearanceManager sharedInstance] appearanceForClass:[self class]];
+    if (!app) {
+        app = [[TKAppearanceManager sharedInstance] appearanceForClass:[self superclass]];
+        if (!app) {
+            app = [[TKAppearanceManager sharedInstance] appearanceForClass:[[self superclass] superclass]];
+        }
+    }
+    return app;
+}
+
+- (void)setTkAppearanceApplied:(BOOL)appAplied {
+    objc_setAssociatedObject(self, &kAppearanceApplied, [NSNumber numberWithBool:appAplied], OBJC_ASSOCIATION_RETAIN);
 }
 
 @end
