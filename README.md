@@ -1,17 +1,18 @@
-*About*
+Introduction
+=========================
 
 This thing let's you mimic Apples UIAppearance thing back on iOS 4
 
-*Install guide*
+Installation
+=========================
 
 * `#import "TKAppearance.h"`
 * Dont forget to add `-fno-objc-arc` to all .m files in Target - Build Phases
 
 
-Now you can do something like this:
+Now you can do something like this on iOS 4:
 
-``` objc
-
+```objc
 [[UINavigationBar appearance] setTintColor:[UIColor redColor]];
     
 UIImage *bgImg = [Decorator backgroundImageForNavigationBarWithSize:CGSizeMake(320.f, 44.f)];
@@ -26,12 +27,12 @@ UIImage *bgImg = [Decorator backgroundImageForNavigationBarWithSize:CGSizeMake(3
 bgImg = [Decorator backgroundImageForTabBarWithSize:CGSizeMake(320.f, 50.f)];
 [[UITabBar appearance] setBackgroundImage:bgImg];
 
-
 ```
 
-on iOS 4 !!!
-*Plugin creation*
+**Note:** Tested on iOS 4.3
 
+Plugin creation
+=========================
 * Look in source files
 
 
