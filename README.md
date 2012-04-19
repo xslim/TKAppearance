@@ -27,6 +27,15 @@ UIImage *bgImg = [Decorator backgroundImageForNavigationBarWithSize:CGSizeMake(3
 bgImg = [Decorator backgroundImageForTabBarWithSize:CGSizeMake(320.f, 50.f)];
 [[UITabBar appearance] setBackgroundImage:bgImg];
 
+CGFloat w = 320.f / self.tabBarController.viewControllers.count -4;
+bgImg = [Decorator backgroundImageForSelectedTabBarItemWithSize:CGSizeMake(w, 48.f)];
+[[UITabBar appearance] setSelectionIndicatorImage:bgImg];
+
+bgImg = [Decorator imageWithSize:CGSizeMake(320.f, 44.f) gradientStart:[UIColor styledTintEndColor] end:[UIColor styledSelectedTintStartColor]];
+[[UISearchBar appearance] setBackgroundImage:bgImg];
+
+[[UISwitch appearance] setOnTintColor:[UIColor styledButtonTintColor]];
+
 ```
 
 **Note:** Tested on iOS 4.3
