@@ -1,9 +1,8 @@
 //
 //  UISearchBar+TKAppearance.h
-//  KPN-Hotspots
+//  TKAppearance
 //
-//  Created by Taras Kalapun on 4/12/12.
-//  Copyright (c) 2012 Xaton. All rights reserved.
+//  Created by Taras Kalapun
 //
 
 

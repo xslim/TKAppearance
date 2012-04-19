@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <Group
+      location = "container:"
+      name = "src">
+      <FileRef
+         location = "group:../NSInvocation+TKAdditions.h">
+      </FileRef>
+      <FileRef
+         location = "group:../NSInvocation+TKAdditions.m">
+      </FileRef>
+      <FileRef
+         location = "group:../NSObject+TKSwizzle.h">
+      </FileRef>
+      <FileRef
+         location = "group:../NSObject+TKSwizzle.m">
+      </FileRef>
+      <FileRef
+         location = "group:../README.md">
+      </FileRef>
+      <FileRef
+         location = "group:../TKAppearance.h">
+      </FileRef>
+      <FileRef
+         location = "group:../TKAppearance.m">
+      </FileRef>
+      <FileRef
+         location = "group:../UINavigationBar+TKAppearance.h">
+      </FileRef>
+      <FileRef
+         location = "group:../UINavigationBar+TKAppearance.m">
+      </FileRef>
+      <FileRef
+         location = "group:../UISearchBar+TKAppearance.h">
+      </FileRef>
+      <FileRef
+         location = "group:../UISearchBar+TKAppearance.m">
+      </FileRef>
+      <FileRef
+         location = "group:../UITabBar+TKAppearance.h">
+      </FileRef>
+      <FileRef
+         location = "group:../UITabBar+TKAppearance.m">
+      </FileRef>
+   </Group>
+   <Group
+      location = "container:"
+      name = "example">
+      <FileRef
+         location = "group:Decorator.h">
+      </FileRef>
+      <FileRef
+         location = "group:Decorator.m">
+      </FileRef>
+      <FileRef
+         location = "group:UIColor+Styled.h">
+      </FileRef>
+      <FileRef
+         location = "group:UIColor+Styled.m">
+      </FileRef>
+      <FileRef
+         location = "group:UIView+XTLinearGradientBackground.h">
+      </FileRef>
+      <FileRef
+         location = "group:UIView+XTLinearGradientBackground.m">
+      </FileRef>
+      <FileRef
+         location = "group:UIView+XTUtils.h">
+      </FileRef>
+      <FileRef
+         location = "group:UIView+XTUtils.m">
+      </FileRef>
+   </Group>
+</Workspace>

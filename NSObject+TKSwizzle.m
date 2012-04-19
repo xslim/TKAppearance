@@ -1,7 +1,8 @@
 //
 //  NSObject+TKSwizzle.m
+//  TKAppearance
 //
-//  Created by Taras Kalapun on 4/10/12.
+//  Created by Taras Kalapun
 //
 
 #import "NSObject+TKSwizzle.h"

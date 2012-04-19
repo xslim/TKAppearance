@@ -1,7 +1,8 @@
 //
 //  UITabBar+TKAppearance.h
+//  TKAppearance
 //
-//  Created by Taras Kalapun on 4/11/12.
+//  Created by Taras Kalapun
 //
 
 

@@ -1,9 +1,8 @@
 //
 //  UITabBar+TKAppearance.m
-//  KPN-Hotspots
+//  TKAppearance
 //
-//  Created by Taras Kalapun on 4/11/12.
-//  Copyright (c) 2012 Xaton. All rights reserved.
+//  Created by Taras Kalapun
 //
 
 #import "UITabBar+TKAppearance.h"
