@@ -243,9 +243,18 @@ static NSString * const kAppearanceObjectSelCustomImp = @"kAppearanceObjectSelCu
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)sel {
     NSMethodSignature *sig = nil;
     
+    // test for private )
+    SEL altSel = NSSelectorFromString([@"_" stringByAppendingString:NSStringFromSelector(sel)]);
+    
     if ([self.customizableClass instancesRespondToSelector:sel]) {
         sig = [self.customizableClass instanceMethodSignatureForSelector:sel];
+    } else if ([self.customizableClass instancesRespondToSelector:altSel]) {
+        sig = [self.customizableClass instanceMethodSignatureForSelector:altSel];
     } else {
+        if (![self.customizableClass respondsToSelector:@selector(proxiedAppearanceMethods)]) {
+            return [NSMethodSignature signatureWithObjCTypes:"v@:@"];
+        }
+        
         NSDictionary *proxiedMethods = [self.customizableClass performSelector:@selector(proxiedAppearanceMethods)];
         NSDictionary *d = [proxiedMethods objectForKey:NSStringFromSelector(sel)];
         if (d) {
@@ -264,6 +273,7 @@ static NSString * const kAppearanceObjectSelCustomImp = @"kAppearanceObjectSelCu
 
 - (void)forwardInvocation:(NSInvocation *)anInvocation {    
     SEL origSel = anInvocation.selector;
+    SEL altSel = NSSelectorFromString([@"_" stringByAppendingString:NSStringFromSelector(origSel)]);
     
     [anInvocation retainArguments];
     
@@ -271,7 +281,18 @@ static NSString * const kAppearanceObjectSelCustomImp = @"kAppearanceObjectSelCu
         // TODO: Search if we already have this SEL in array
         [self addInvocation:anInvocation];
         self.needsUpdate = YES;
+    } else if ([self.customizableClass instancesRespondToSelector:altSel]) {
+        // TODO: Search if we already have this SEL in array
+        anInvocation.selector = altSel;
+        [self addInvocation:anInvocation];
+        self.needsUpdate = YES;
     } else {
+        if (![self.customizableClass respondsToSelector:@selector(proxiedAppearanceMethods)]) {
+            [anInvocation setTarget:self];
+            [anInvocation setSelector:@selector(appearanceNotSupported:)];
+            [anInvocation invoke];
+            return;
+        }
         NSDictionary *proxiedMethods = [self.customizableClass performSelector:@selector(proxiedAppearanceMethods)];
         NSDictionary *d = [proxiedMethods objectForKey:NSStringFromSelector(origSel)];
         if (d) {
@@ -281,6 +302,9 @@ static NSString * const kAppearanceObjectSelCustomImp = @"kAppearanceObjectSelCu
     return;
 }
 
+- (void)appearanceNotSupported:(id)something,... {
+    NSLog(@"appearanceNotSupported... yet :)");
+}
 
 + (void)applyInvocationsTo:(id)obj {
     TKAppearance *app = [[obj class] performSelector:@selector(tkAppearance)];
@@ -382,6 +406,7 @@ static id UIView_appearance(id self, SEL _cmd) {
     if (![UIView respondsToSelector:@selector(appearance)]) {
         [UIView addClassMethod:@selector(appearance) with:(IMP)UIView_appearance types:"@@:"];
     }
+    [UISwitch printClassMethods];
 }
 
 static char kAppearanceApplied; 

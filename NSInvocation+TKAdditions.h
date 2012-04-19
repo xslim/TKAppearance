@@ -13,6 +13,4 @@
 - (void)setVAArguments:(va_list)arguments;
 - (NSArray *)arrayArguments;
 
-- (void)invokeUsingIMP:(IMP)imp; //hack, needs check if Apple will accept this
-
 @end
