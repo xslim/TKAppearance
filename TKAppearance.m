@@ -406,7 +406,6 @@ static id UIView_appearance(id self, SEL _cmd) {
     if (![UIView respondsToSelector:@selector(appearance)]) {
         [UIView addClassMethod:@selector(appearance) with:(IMP)UIView_appearance types:"@@:"];
     }
-    [UISwitch printClassMethods];
 }
 
 static char kAppearanceApplied; 
