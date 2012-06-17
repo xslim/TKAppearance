@@ -5,6 +5,12 @@ This thing let's you mimic Apples UIAppearance thing back on iOS 4
 
 Installation
 =========================
+* You need [cocoapods](http://cocoapods.org) lib manager
+* Edit your `Podfile` and add
+
+```ruby
+dependency 'TKAppearance', :podspec => 'https://raw.github.com/xslim/TKAppearance/master/TKAppearance.podspec'
+```
 
 * `#import "TKAppearance.h"`
 * Dont forget to add `-fno-objc-arc` to all .m files in Target - Build Phases
