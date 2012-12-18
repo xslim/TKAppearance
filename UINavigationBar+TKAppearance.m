@@ -6,6 +6,7 @@
 //
 
 #import "UINavigationBar+TKAppearance.h"
+#import "TKAppearance.h"
 
 @implementation UINavigationBar (TKAppearance)
 
@@ -46,16 +47,20 @@
                         ^(id _self, NSArray *origArgs, va_list args) {
                             NSDictionary *textAttributes = [origArgs objectAtIndex:0];
                             
-                            UIFont *font = [textAttributes objectForKey:UITextAttributeFont];
+                            UIFont *font = [textAttributes objectForKey:TKTextAttributeFont];
                             if (!font) font = [UIFont boldSystemFontOfSize:20.f];
                             
-                            UIColor *color = [textAttributes objectForKey:UITextAttributeTextColor];
+                            UIColor *color = [textAttributes objectForKey:TKTextAttributeTextColor];
                             if (!color) color = [UIColor whiteColor];
                             
-                            UIColor *shadowColor = [textAttributes objectForKey:UITextAttributeTextShadowColor];
+                            UIColor *shadowColor = [textAttributes objectForKey:TKTextAttributeTextShadowColor];
                             if (!shadowColor) shadowColor = [UIColor whiteColor];
                             
                             CGFloat sizeOffset = [[textAttributes objectForKey:@"sizeOffset"] floatValue];
+                            
+                            CGPoint shadowOffset = CGPointMake(0,-1);
+                            if([textAttributes objectForKey:TKTextAttributeTextShadowOffset])
+                             shadowOffset = [[textAttributes objectForKey:TKTextAttributeTextShadowOffset] CGPointValue];
                             
                             NSString *string = va_arg(args, NSString*);
                             CGRect rect = va_arg(args, CGRect);
@@ -65,12 +70,14 @@
                             rect.size.width += sizeOffset * 2;
                             rect.origin.x -= sizeOffset;
                             
-                            // Draw shadow of string   
+                            // Draw shadow of string
                             if (shadowColor) {
                                 [shadowColor set];
-                                rect.origin.y -= 1;
+                                rect.origin.y += shadowOffset.y;
+                                rect.origin.x += shadowOffset.x;
                                 [string drawInRect:rect withFont:font lineBreakMode:UILineBreakModeTailTruncation alignment:UITextAlignmentCenter];
-                                rect.origin.y += 1;
+                                rect.origin.y -= shadowOffset.y;
+                                rect.origin.x -= shadowOffset.x;
                             }
                             
                             // Draw string

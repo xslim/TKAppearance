@@ -25,9 +25,9 @@ UIImage *bgImg = [Decorator backgroundImageForNavigationBarWithSize:CGSizeMake(3
 [[UINavigationBar appearance] setBackgroundImage:bgImg forBarMetrics:UIBarMetricsDefault];
 
 [[UINavigationBar appearance] setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:
-                                                          [UIFont fontWithName:@"KPNSans-Bold" size:20.0], UITextAttributeFont,
-                                                          //[UIColor redColor], UITextAttributeTextColor,
-                                                          [UIColor styledShadowColor], UITextAttributeTextShadowColor,
+                                                          [UIFont fontWithName:@"KPNSans-Bold" size:20.0], TKTextAttributeFont,
+                                                          //[UIColor redColor], TKTextAttributeTextColor,
+                                                          [UIColor styledShadowColor], TKTextAttributeTextShadowColor,
                                                           nil]];
 
 bgImg = [Decorator backgroundImageForTabBarWithSize:CGSizeMake(320.f, 50.f)];

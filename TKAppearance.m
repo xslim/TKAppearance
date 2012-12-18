@@ -388,13 +388,22 @@ static NSString * const kAppearanceObjectSelCustomImp = @"kAppearanceObjectSelCu
 @end
 
 
-NSString *const UITextAttributeFont = @"kUITextAttributeFont";
-// Key to the text color in the text attributes dictionary. A UIColor instance is expected.
-NSString *const UITextAttributeTextColor = @"kUITextAttributeTextColor";
-// Key to the text shadow color in the text attributes dictionary.  A UIColor instance is expected.
-NSString *const UITextAttributeTextShadowColor = @"kUITextAttributeTextShadowColor";
-// Key to the offset used for the text shadow in the text attributes dictionary. An NSValue instance wrapping a UIOffset struct is expected.
-NSString *const UITextAttributeTextShadowOffset = @"kUITextAttributeTextShadowOffset";
+__attribute__((constructor)) static void defineConstants(void) {
+    if(&UITextAttributeFont)
+    {
+        TKTextAttributeFont = UITextAttributeFont;
+        TKTextAttributeTextColor = UITextAttributeTextColor;
+        TKTextAttributeTextShadowColor = UITextAttributeTextShadowColor;
+        TKTextAttributeTextShadowOffset = UITextAttributeTextShadowOffset;
+    }
+    else
+    {
+        TKTextAttributeFont = @"UITextAttributeFont";
+        TKTextAttributeTextColor = @"UITextAttributeTextColor";
+        TKTextAttributeTextShadowColor = @"UITextAttributeTextShadowColor";
+        TKTextAttributeTextShadowOffset = @"UITextAttributeTextShadowOffset";
+    }
+}
 
 
 @implementation UIView (TKAppearance)
