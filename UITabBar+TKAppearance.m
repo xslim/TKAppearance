@@ -9,7 +9,7 @@
 
 @implementation UITabBar (TKAppearance)
 
-+ (NSDictionary *)proxiedAppearanceMethods {
++ (NSDictionary *)proxiedAppearanceMethodsContainedIn:(NSArray*) containedIn{
     
     NSDictionary *d1 = [NSDictionary dictionaryWithObjectsAndKeys:
                         @"v@:@", @"encoding",

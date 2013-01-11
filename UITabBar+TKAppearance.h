@@ -9,6 +9,6 @@
 
 @interface UITabBar (TKAppearance)
 
-+ (NSDictionary *)proxiedAppearanceMethods;
++ (NSDictionary *)proxiedAppearanceMethodsContainedIn:(NSArray*) containedIn;
 
 @end

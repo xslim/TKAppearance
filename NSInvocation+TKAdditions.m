@@ -54,7 +54,7 @@
 		if(!strcmp(argType, @encode(id))) {
 			id arg = nil;
             [invocation getArgument:&arg atIndex:i];
-            [args insertObject:arg atIndex:ai];
+            [args insertObject:arg?arg:[NSNull null] atIndex:ai];
 		} else if(!strcmp(argType, @encode(SEL))) {
 			SEL arg = nil;
 			[invocation getArgument:&arg atIndex:i];
