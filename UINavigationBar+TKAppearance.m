@@ -6,10 +6,18 @@
 //
 
 #import "UINavigationBar+TKAppearance.h"
-
+#import "TKAppearance.h"
 @implementation UINavigationBar (TKAppearance)
 
-+ (NSDictionary *)proxiedAppearanceMethods {
++ (NSDictionary *)proxiedAppearanceMethodsContainedIn:(NSArray*) containedIn{
+    
+    BOOL (^popoverBlock)(id _self) = [[^(UIView* _self){
+        return [_self.superview.superview.superview isKindOfClass:NSClassFromString(@"UIPopoverView")];
+    } copy] autorelease];
+    
+    BOOL (^drawRectCheckBlock)(id _self) = nil;
+    if([containedIn containsObject:[UIPopoverController class]])
+        drawRectCheckBlock = popoverBlock;
     
     NSDictionary *d1 = [NSDictionary dictionaryWithObjectsAndKeys:
                         @"v@:@i", @"encoding",
@@ -18,24 +26,30 @@
                         @"drawRect:", @"hookSel",
                         ^(id _self, NSArray *origArgs, va_list args) {
                             UIImage *image = [origArgs objectAtIndex:0];
-                            CGRect rect = va_arg(args, CGRect);
-                            
-                            /*
-                             // Tiled
-                             CGSize imageViewSize = imageView.bounds.size;
-                             UIGraphicsBeginImageContext(imageViewSize);
-                             CGContextRef imageContext = UIGraphicsGetCurrentContext();
-                             CGContextDrawTiledImage(imageContext, (CGRect){ CGPointZero, imageViewSize }, tileImage);
-                             UIImage *finishedImage = UIGraphicsGetImageFromCurrentImageContext();
-                             UIGraphicsEndImageContext();
-                             */
-                            [image drawInRect:rect];
+                            if(image != [NSNull null]){
+                                CGRect rect = va_arg(args, CGRect);
+                                
+                                /*
+                                 // Tiled
+                                 CGSize imageViewSize = imageView.bounds.size;
+                                 UIGraphicsBeginImageContext(imageViewSize);
+                                 CGContextRef imageContext = UIGraphicsGetCurrentContext();
+                                 CGContextDrawTiledImage(imageContext, (CGRect){ CGPointZero, imageViewSize }, tileImage);
+                                 UIImage *finishedImage = UIGraphicsGetImageFromCurrentImageContext();
+                                 UIGraphicsEndImageContext();
+                                 */
+                                [image drawInRect:rect];
+                            }
                         }, @"hookBlockAfter",
                         ^(id _self, IMP origImp, va_list args) {
                             SEL sel = NSSelectorFromString(@"drawRect:");
                             CGRect rect = va_arg(args, CGRect);
                             origImp(_self, sel, rect);
                         }, @"origBlock",
+                        [NSDictionary dictionaryWithObjectsAndKeys:
+                         drawRectCheckBlock, @"checkBlock",
+                         nil], @"hookChecks",
+
                         nil];
     
     NSDictionary *d2 = [NSDictionary dictionaryWithObjectsAndKeys:
@@ -46,16 +60,18 @@
                         ^(id _self, NSArray *origArgs, va_list args) {
                             NSDictionary *textAttributes = [origArgs objectAtIndex:0];
                             
-                            UIFont *font = [textAttributes objectForKey:UITextAttributeFont];
+                            UIFont *font = [textAttributes objectForKey:TKTextAttributeFont];
                             if (!font) font = [UIFont boldSystemFontOfSize:20.f];
                             
-                            UIColor *color = [textAttributes objectForKey:UITextAttributeTextColor];
+                            UIColor *color = [textAttributes objectForKey:TKTextAttributeTextColor];
                             if (!color) color = [UIColor whiteColor];
                             
-                            UIColor *shadowColor = [textAttributes objectForKey:UITextAttributeTextShadowColor];
+                            UIColor *shadowColor = [textAttributes objectForKey:TKTextAttributeTextShadowColor];
                             if (!shadowColor) shadowColor = [UIColor whiteColor];
                             
                             CGFloat sizeOffset = [[textAttributes objectForKey:@"sizeOffset"] floatValue];
+                            
+                            CGPoint shadowOffset = [[textAttributes objectForKey:TKTextAttributeTextShadowOffset] CGPointValue];
                             
                             NSString *string = va_arg(args, NSString*);
                             CGRect rect = va_arg(args, CGRect);
@@ -68,9 +84,11 @@
                             // Draw shadow of string   
                             if (shadowColor) {
                                 [shadowColor set];
-                                rect.origin.y -= 1;
+                                rect.origin.y += shadowOffset.y;
+                                rect.origin.x += shadowOffset.x;
                                 [string drawInRect:rect withFont:font lineBreakMode:UILineBreakModeTailTruncation alignment:UITextAlignmentCenter];
-                                rect.origin.y += 1;
+                                rect.origin.y -= shadowOffset.y;
+                                rect.origin.x -= shadowOffset.x;
                             }
                             
                             // Draw string
@@ -88,7 +106,6 @@
                         [NSDictionary dictionaryWithObjectsAndKeys:
                          @"UINavigationBar", @"superviewIs",
                          [NSArray arrayWithObject:@"UINavigationItemButtonView"], @"classNotIn",
-                         
                          nil], @"hookChecks",
                         nil];
     

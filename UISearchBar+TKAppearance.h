@@ -8,5 +8,5 @@
 
 
 @interface UISearchBar (TKAppearance)
-+ (NSDictionary *)proxiedAppearanceMethods;
++ (NSDictionary *)proxiedAppearanceMethodsContainedIn:(NSArray*) containedIn;
 @end
